@@ -24,22 +24,15 @@ var baseURL string = "https://kr.indeed.com/jobs?q=python&limit=50"
 
 func main(){
     var jobs []extractedJob
-    c := make(chan []extractedJob)
 
     totalPages := getPages()
     //fmt.Println("Total pages:", totalPages)
 
     for i := 0; i < totalPages; i ++ {
-        go getPage(i, c)
-//        jobs = append(jobs, extractedJobs...)   //  append contents of the extractedJobs:
+        extractedJobs := getPage(i)
+        jobs = append(jobs, extractedJobs...)   //  append contents of the extractedJobs:
     }
 //    fmt.Println(jobs)
-
-    //  Wait go routines to be finished
-    for i:=0; i<totalPages; i++{
-        extractedJobs := <-c
-        jobs = append(jobs, extractedJobs...)
-    }
 
     writeJobs(jobs)
     fmt.Println("Done, extracted", len(jobs))
@@ -47,9 +40,6 @@ func main(){
 
 
 func writeJobs(jobs []extractedJob) {
-
-    //  Code Challenge : use Go Routine on writing as well.
-
     file, err := os.Create("jobs.csv")
     checkErr(err)
     w := csv.NewWriter(file)
@@ -68,7 +58,7 @@ func writeJobs(jobs []extractedJob) {
     }
 }
 
-func getPage(page int, mainC chan<- []extractedJob) {
+func getPage(page int) []extractedJob {
 
     var jobs []extractedJob
 
@@ -97,13 +87,9 @@ func getPage(page int, mainC chan<- []extractedJob) {
     for i:=0; i<searchCards.Length(); i++ {
         //  receive the messege.
         job := <-c  //  give me the messege from the channel
-        jobs = append(jobs, job)
     }
-    //  We need to wait for get pages to finish
 
-
-//    return jobs
-    mainC <- jobs
+    return jobs
 }
 
 func getPages() int {
